@@ -1,0 +1,204 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+  /* 暖色系主色调 - 奶油米白背景 */
+  --background: 45 15% 96%;
+  --foreground: 30 10% 15%;
+  
+  /* 卡片区域 - 稍浅的米白，增加层次感 */
+  --card: 45 15% 98%;
+  --card-foreground: 30 10% 15%;
+  
+  /* 弹出层 - 温暖的纯白 */
+  --popover: 45 15% 98%;
+  --popover-foreground: 30 10% 15%;
+  
+  /* 主色调 - 活力暖橙 */
+  --primary: 25 85% 55%;
+  --primary-foreground: 45 15% 98%;
+  
+  /* 次要色 - 温暖的沙色 */
+  --secondary: 35 30% 88%;
+  --secondary-foreground: 30 20% 25%;
+  
+  /* 柔和色 - 浅暖灰 */
+  --muted: 40 12% 90%;
+  --muted-foreground: 30 10% 35%;
+  
+  /* 强调色 - 珊瑚橙 */
+  --accent: 12 70% 55%;
+  --accent-foreground: 45 15% 98%;
+  
+  /* 破坏性操作 - 暖红 */
+  --destructive: 0 75% 55%;
+  --destructive-foreground: 45 15% 98%;
+  
+  /* 边框和输入框 - 温暖的浅棕色 */
+  --border: 35 15% 82%;
+  --input: 35 15% 82%;
+  
+  /* 焦点环 - 主色调 */
+  --ring: 25 85% 55%;
+  
+  /* 圆角半径 */
+  --radius: 0.5rem;
+  
+  /* 侧边栏 - 温暖的米白背景 */
+  --sidebar-background: 45 15% 94%;
+  --sidebar-foreground: 30 10% 20%;
+  --sidebar-primary: 25 85% 55%;
+  --sidebar-primary-foreground: 45 15% 98%;
+  --sidebar-accent: 35 20% 86%;
+  --sidebar-accent-foreground: 30 15% 25%;
+  --sidebar-border: 35 15% 84%;
+  --sidebar-ring: 25 85% 55%;
+  
+  /* 钱包特定颜色 - 暖色系主题 */
+  --wallet-gradient: linear-gradient(135deg, #f59e0b, #f97316);
+  --wallet-glow: 0 0 30px rgba(245, 158, 11, 0.3);
+  --wallet-accent: 25 85% 55%;
+  --wallet-success: 142 76% 36%;
+  --wallet-warning: 38 92% 50%;
+  --wallet-error: 0 75% 55%;
+  
+  /* 动画属性 */
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* 主要按钮（Primary Button）*/
+  --btn-primary-bg: 25 85% 55%;
+  --btn-primary-hover: 25 85% 48%;
+  --btn-primary-active: 25 85% 42%;
+  --btn-primary-disabled: 25 50% 70%;
+  --btn-primary-text: 45 15% 98%;
+  
+  /* 次要按钮（Secondary Button）*/
+  --btn-secondary-bg: 35 30% 88%;
+  --btn-secondary-hover: 35 30% 80%;
+  --btn-secondary-active: 35 30% 74%;
+  --btn-secondary-disabled: 35 20% 85%;
+  --btn-secondary-text: 30 20% 25%;
+  
+  /* 轮廓按钮（Outline Button）*/
+  --btn-outline-bg: transparent;
+  --btn-outline-border: 25 85% 55%;
+  --btn-outline-hover-bg: 25 85% 55%;
+  --btn-outline-hover-text: 45 15% 98%;
+  --btn-outline-text: 25 85% 55%;
+  
+  /* 幽灵按钮（Ghost Button）*/
+  --btn-ghost-bg: transparent;
+  --btn-ghost-hover: 35 20% 90%;
+  --btn-ghost-active: 35 20% 84%;
+  --btn-ghost-text: 30 10% 25%;
+  
+  /* 危险按钮（Destructive Button）*/
+  --btn-destructive-bg: 0 75% 55%;
+  --btn-destructive-hover: 0 75% 48%;
+  --btn-destructive-active: 0 75% 42%;
+  --btn-destructive-disabled: 0 50% 70%;
+  --btn-destructive-text: 45 15% 98%;
+  
+  /* 成功按钮（Success Button）*/
+  --btn-success-bg: 142 76% 36%;
+  --btn-success-hover: 142 76% 30%;
+  --btn-success-active: 142 76% 26%;
+  --btn-success-text: 45 15% 98%;
+  
+  /* 警告按钮（Warning Button）*/
+  --btn-warning-bg: 38 92% 50%;
+  --btn-warning-hover: 38 92% 45%;
+  --btn-warning-active: 38 92% 40%;
+  --btn-warning-text: 30 15% 10%;
+  
+  /* 钱包连接按钮专用 */
+  --btn-wallet-bg: 25 85% 55%;
+  --btn-wallet-hover: 25 85% 48%;
+  --btn-wallet-glow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.dark {
+  /* 暗色模式 - 温暖的深色背景（深棕色/深暖灰） */
+  --background: 30 15% 8%;
+  --foreground: 40 20% 85%;
+  
+  /* 卡片区域 - 稍浅的深暖色 */
+  --card: 30 15% 10%;
+  --card-foreground: 40 20% 85%;
+  
+  /* 弹出层 */
+  --popover: 30 15% 10%;
+  --popover-foreground: 40 20% 85%;
+  
+  /* 主色调 - 亮暖橙，保持品牌一致性 */
+  --primary: 25 85% 60%;
+  --primary-foreground: 30 15% 8%;
+  
+  /* 次要色 - 温暖的中深色 */
+  --secondary: 35 20% 20%;
+  --secondary-foreground: 40 20% 85%;
+  
+  /* 柔和色 */
+  --muted: 35 15% 18%;
+  --muted-foreground: 40 15% 65%;
+  
+  /* 强调色 - 亮珊瑚 */
+  --accent: 12 70% 50%;
+  --accent-foreground: 40 20% 85%;
+  
+  /* 破坏性操作 */
+  --destructive: 0 65% 45%;
+  --destructive-foreground: 40 20% 85%;
+  
+  /* 边框 - 温暖的深棕色 */
+  --border: 35 15% 20%;
+  --input: 35 15% 20%;
+  
+  /* 焦点环 */
+  --ring: 25 85% 60%;
+  
+  /* 侧边栏 - 深暖色 */
+  --sidebar-background: 30 15% 10%;
+  --sidebar-foreground: 40 20% 85%;
+  --sidebar-primary: 25 85% 60%;
+  --sidebar-primary-foreground: 30 15% 8%;
+  --sidebar-accent: 35 15% 18%;
+  --sidebar-accent-foreground: 40 20% 85%;
+  --sidebar-border: 35 15% 20%;
+  --sidebar-ring: 25 85% 60%;
+
+  /* 暗色模式按钮颜色 */
+  --btn-primary-bg: 25 85% 60%;
+  --btn-primary-hover: 25 85% 52%;
+  --btn-primary-active: 25 85% 45%;
+  
+  --btn-secondary-bg: 35 20% 25%;
+  --btn-secondary-hover: 35 20% 32%;
+  --btn-secondary-active: 35 20% 38%;
+  --btn-secondary-text: 40 20% 85%;
+  
+  --btn-ghost-hover: 35 15% 20%;
+  --btn-ghost-active: 35 15% 26%;
+  --btn-ghost-text: 40 20% 80%;
+  
+  --btn-outline-border: 25 85% 60%;
+  --btn-outline-text: 25 85% 60%;
+  --btn-outline-hover-bg: 25 85% 60%;
+  
+  --btn-wallet-bg: 25 85% 60%;
+  --btn-wallet-hover: 25 85% 52%;
+}
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
