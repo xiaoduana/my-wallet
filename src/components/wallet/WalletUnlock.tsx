@@ -33,7 +33,13 @@ export const WalletUnlock = () => {
           description: "请检查您的密码",
           variant: "destructive"
         });
+        return
       }
+      chrome.runtime.sendMessage({
+        type:
+          "WALLET_UNLOCKED",
+          password
+      })
     } catch (error) {
       toast({
         title: "解锁失败",
@@ -101,8 +107,8 @@ export const WalletUnlock = () => {
               </div>
             </div>
 
-            <Button 
-              onClick={handleUnlock} 
+            <Button
+              onClick={handleUnlock}
               className="w-full bg-wallet-gradient hover:opacity-90"
               disabled={isLoading || !password}
             >

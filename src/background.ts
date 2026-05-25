@@ -1,10 +1,45 @@
-
+import { getWalletState } from "@/lib/utils"
+import { session } from "@/background/session";
+let pendingRequest = null
+let unlockWindowId = null
 chrome.runtime.onMessage.addListener(
   (
     message,
     sender,
     sendResponse
   ) => {
+    if (
+      message.type ===
+      "WALLET_UNLOCKED"
+    ) {
+      console.log(session)
+      session.password = message.password
+      console.log("Wallet unlocked with password:", session.password)
+      ; (async () => {
+
+        const state =
+          await getWalletState()
+
+        const currentAccount =
+          state?.currentAccount
+
+        if (pendingRequest) {
+
+          pendingRequest({
+            result: currentAccount
+              ? [
+                currentAccount.address
+              ]
+              : []
+          })
+
+          pendingRequest = null
+          unlockWindowId = null
+        }
+      })()
+
+      return true
+    }
     if (
       message.type !==
       "MY_WALLET_REQUEST"
@@ -16,42 +51,45 @@ chrome.runtime.onMessage.addListener(
       const { method, params } =
         message.args
 
-      const storage =
-        await chrome.storage.local.get(
-          "wallet-store"
-        )
+      const state = await getWalletState()
 
-      const rawWalletStore =
-        storage["wallet-store"]
+      const currentAccount = state?.currentAccount
 
+      const currentNetwork = state?.currentNetwork
 
-      /**
-       * 关键
-       */
-      const walletStore =
-        typeof rawWalletStore ===
-          "string"
-          ? JSON.parse(
-            rawWalletStore
-          )
-          : rawWalletStore
-
-
-      const state =
-        walletStore?.state
-
-      const currentAccount =
-        state?.currentAccount
-
-      const currentNetwork =
-        state?.currentNetwork
-
+      const isLocked = state?.isLocked
       try {
         switch (method) {
           /**
            * 连接钱包
            */
           case "eth_requestAccounts": {
+            if (isLocked) {
+              /**
+               * 保存请求
+               */
+              pendingRequest = sendResponse
+
+              /**
+               * 打开解锁页面
+               */
+              if (!unlockWindowId) {
+
+                const win =
+                  await chrome.windows.create({
+                    url: "popup.html",
+
+                    type: "popup",
+
+                    width: 380,
+
+                    height: 700
+                  })
+
+                unlockWindowId = win.id
+              }
+              return
+            }
             sendResponse({
               result: currentAccount
                 ? [

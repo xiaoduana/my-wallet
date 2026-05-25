@@ -18,11 +18,11 @@ export const AccountManager = () => {
   const [editName, setEditName] = useState('');
   const [password, setPassword] = useState('');
 
-  const { 
-    accounts, 
-    currentAccount, 
-    createAccount, 
-    switchAccount, 
+  const {
+    accounts,
+    currentAccount,
+    createAccount,
+    switchAccount,
     updateAccountName,
     importPrivateKey,
     isValidPassword
@@ -30,23 +30,23 @@ export const AccountManager = () => {
   const { toast } = useToast();
 
   const handleCreateAccount = async () => {
-    if (!password) {
-      toast({
-        title: "请输入密码",
-        description: "需要密码验证以创建新账户",
-        variant: "destructive"
-      });
-      return;
-    }
+    // if (!password) {
+    //   toast({
+    //     title: "请输入密码",
+    //     description: "需要密码验证以创建新账户",
+    //     variant: "destructive"
+    //   });
+    //   return;
+    // }
 
-    if (!isValidPassword(password)) {
-      toast({
-        title: "密码错误",
-        description: "请检查您的密码",
-        variant: "destructive"
-      });
-      return;
-    }
+    // if (!isValidPassword(password)) {
+    //   toast({
+    //     title: "密码错误",
+    //     description: "请检查您的密码",
+    //     variant: "destructive"
+    //   });
+    //   return;
+    // }
 
     try {
       await createAccount(newAccountName || undefined);
@@ -57,6 +57,7 @@ export const AccountManager = () => {
         title: "账户创建成功！"
       });
     } catch (error) {
+      console.error("创建账户失败:", error);
       toast({
         title: "创建失败",
         description: "无法创建新账户",
@@ -65,50 +66,50 @@ export const AccountManager = () => {
     }
   };
 
-  const handleImportAccount = async () => {
-    if (!password) {
-      toast({
-        title: "请输入密码",
-        description: "需要密码验证以导入账户",
-        variant: "destructive"
-      });
-      return;
-    }
+  // const handleImportAccount = async () => {
+  //   if (!password) {
+  //     toast({
+  //       title: "请输入密码",
+  //       description: "需要密码验证以导入账户",
+  //       variant: "destructive"
+  //     });
+  //     return;
+  //   }
 
-    if (!isValidPassword(password)) {
-      toast({
-        title: "密码错误",
-        description: "请检查您的密码",
-        variant: "destructive"
-      });
-      return;
-    }
+  //   if (!isValidPassword(password)) {
+  //     toast({
+  //       title: "密码错误",
+  //       description: "请检查您的密码",
+  //       variant: "destructive"
+  //     });
+  //     return;
+  //   }
 
-    if (!privateKey.trim()) {
-      toast({
-        title: "请输入私钥",
-        variant: "destructive"
-      });
-      return;
-    }
+  //   if (!privateKey.trim()) {
+  //     toast({
+  //       title: "请输入私钥",
+  //       variant: "destructive"
+  //     });
+  //     return;
+  //   }
 
-    try {
-      await importPrivateKey(privateKey.trim(), password, importAccountName || undefined);
-      setIsImportDialogOpen(false);
-      setPrivateKey('');
-      setImportAccountName('');
-      setPassword('');
-      toast({
-        title: "账户导入成功！"
-      });
-    } catch (error) {
-      toast({
-        title: "导入失败",
-        description: "私钥无效或其他错误",
-        variant: "destructive"
-      });
-    }
-  };
+  //   try {
+  //     await importPrivateKey(privateKey.trim(), password, importAccountName || undefined);
+  //     setIsImportDialogOpen(false);
+  //     setPrivateKey('');
+  //     setImportAccountName('');
+  //     setPassword('');
+  //     toast({
+  //       title: "账户导入成功！"
+  //     });
+  //   } catch (error) {
+  //     toast({
+  //       title: "导入失败",
+  //       description: "私钥无效或其他错误",
+  //       variant: "destructive"
+  //     });
+  //   }
+  // };
 
   const handleEditName = (address: string, currentName: string) => {
     setEditingAccount(address);
@@ -140,12 +141,13 @@ export const AccountManager = () => {
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">账户管理</h2>
         <div className="flex gap-2">
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <Button size="sm" onClick={handleCreateAccount}>
+            <Plus className="w-4 h-4 mr-2" />
+            创建账户
+          </Button>
+          {/* <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button size="sm">
-                <Plus className="w-4 h-4 mr-2" />
-                创建账户
-              </Button>
+              
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
@@ -177,9 +179,9 @@ export const AccountManager = () => {
                 </Button>
               </div>
             </DialogContent>
-          </Dialog>
+          </Dialog> */}
 
-          <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+          {/* <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" size="sm">
                 <Key className="w-4 h-4 mr-2" />
@@ -226,19 +228,18 @@ export const AccountManager = () => {
                 </Button>
               </div>
             </DialogContent>
-          </Dialog>
+          </Dialog> */}
         </div>
       </div>
 
       <div className="space-y-3">
         {accounts.map((account) => (
-          <Card 
+          <Card
             key={account.address}
-            className={`cursor-pointer transition-all ${
-              currentAccount?.address === account.address 
-                ? 'ring-2 ring-primary bg-card' 
+            className={`cursor-pointer transition-all ${currentAccount?.address === account.address
+                ? 'ring-2 ring-primary bg-card'
                 : 'hover:bg-muted/50'
-            }`}
+              }`}
             onClick={() => switchAccount(account.address)}
           >
             <CardContent className="p-4">
@@ -294,7 +295,7 @@ export const AccountManager = () => {
                     </div>
                   )}
                 </div>
-                
+
                 {currentAccount?.address === account.address && (
                   <div className="ml-4">
                     <span className="text-xs bg-[rgb(184,247,3)] text-[rgb(45,46,55)] px-2 py-1 rounded">

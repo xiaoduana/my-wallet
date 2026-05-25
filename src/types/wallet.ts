@@ -1,6 +1,6 @@
 export interface WalletAccount {
   address: string;
-  privateKey: string;
+  privateKey?: string;
   name: string;
   index: number;
 }
@@ -12,6 +12,7 @@ export interface WalletState {
   currentAccount: WalletAccount | null;
   mnemonic: string | null;
   password: string | null;
+  originPassword?: string | null;
   currentNetwork: Network;
   networks: Network[];
   tokens: Token[];

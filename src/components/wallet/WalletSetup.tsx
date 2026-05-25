@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useWalletStore } from '@/store/wallet';
 import { Check, Copy, Eye, EyeOff, Import, Key, Wallet } from 'lucide-react';
 import React, { useState } from 'react';
-
+import { session } from "@/background/session";
 export const WalletSetup = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -45,12 +45,12 @@ export const WalletSetup = () => {
     setIsLoading(true);
     try {
       const { mnemonic: newMnemonic } = await createWallet(password);
-      console.log(newMnemonic)
       setMnemonic(newMnemonic);
       toast({
         title: "钱包创建成功！",
         description: "请务必备份您的助记词"
       });
+      session.password = password;
     } catch (error) {
       console.log(error);
       toast({
@@ -87,6 +87,7 @@ export const WalletSetup = () => {
       toast({
         title: "钱包导入成功！"
       });
+      session.password = password;
     } catch (error) {
       toast({
         title: "导入失败",
@@ -122,6 +123,7 @@ export const WalletSetup = () => {
       toast({
         title: "私钥导入成功！"
       });
+      session.password = password;
     } catch (error) {
       toast({
         title: "导入失败",

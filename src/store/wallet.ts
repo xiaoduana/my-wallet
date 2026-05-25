@@ -28,7 +28,7 @@ import { AES, SHA256, enc } from 'crypto-js';
 import { ethers } from 'ethers';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-
+import { session } from "@/background/session";
 interface WalletStore extends WalletState {
   // Wallet management
   createWallet: (password: string) => Promise<{ mnemonic: string; account: WalletAccount }>;
@@ -36,21 +36,21 @@ interface WalletStore extends WalletState {
   importPrivateKey: (privateKey: string, password: string, name?: string) => Promise<WalletAccount>;
   unlockWallet: (password: string) => boolean;
   lockWallet: () => void;
-  
+
   // Account management
   createAccount: (name?: string) => WalletAccount;
   switchAccount: (address: string) => void;
   updateAccountName: (address: string, name: string) => void;
-  
+
   // Network management
   addNetwork: (network: Network) => void;
   switchNetwork: (networkId: string) => void;
-  
+
   // Token management
   addToken: (token: Token) => void;
   removeToken: (address: string) => void;
   updateTokenBalance: (address: string, balance: string) => void;
-  
+
   // Utility
   getProvider: () => ethers.JsonRpcProvider | null;
   isValidPassword: (password: string) => boolean;
@@ -68,6 +68,7 @@ const initialState: WalletState = {
   currentAccount: null,
   mnemonic: null,
   password: null,
+  originPassword: null,
   currentNetwork: DEFAULT_NETWORKS[0],
   networks: DEFAULT_NETWORKS,
   tokens: []
@@ -86,15 +87,12 @@ export const useWalletStore = create<WalletStore>()(
         const seedBuffer = await bip39.mnemonicToSeed(mnemonic);
         // 转成 Uint8Array
         const seed = new Uint8Array(seedBuffer);
-        console.log(mnemonic);
-        console.log(seedBuffer);
-        console.log(seed);
-        
+
         // 生成钱包
         const hdNode = ethers.HDNodeWallet.fromSeed(seed);
         // 生成账户
         const wallet = hdNode.derivePath("m/44'/60'/0'/0/0");
-        
+
         const account: WalletAccount = {
           address: wallet.address,
           privateKey: wallet.privateKey,
@@ -111,7 +109,8 @@ export const useWalletStore = create<WalletStore>()(
           accounts: [{ ...account, privateKey: encryptedPrivateKey }],
           currentAccount: account,
           mnemonic: encryptedMnemonic,
-          password: SHA256(password).toString()
+          password: SHA256(password).toString(),
+          originPassword: password
         });
 
         return { mnemonic, account };
@@ -127,7 +126,7 @@ export const useWalletStore = create<WalletStore>()(
         const seed = new Uint8Array(seedBuffer);
         const hdNode = ethers.HDNodeWallet.fromSeed(seed);
         const wallet = hdNode.derivePath("m/44'/60'/0'/0/0");
-        
+
         const account: WalletAccount = {
           address: wallet.address,
           privateKey: wallet.privateKey,
@@ -153,7 +152,7 @@ export const useWalletStore = create<WalletStore>()(
         try {
           const wallet = new ethers.Wallet(privateKey);
           const existingAccounts = get().accounts;
-          
+
           const account: WalletAccount = {
             address: wallet.address,
             privateKey: wallet.privateKey,
@@ -178,11 +177,12 @@ export const useWalletStore = create<WalletStore>()(
       unlockWallet: (password: string) => {
         const state = get();
         const hashedPassword = SHA256(password).toString();
-        
+
         if (state.password === hashedPassword) {
-          set({ isLocked: false });
+          set({ isLocked: false, originPassword: password });
           return true;
         }
+    
         return false;
       },
 
@@ -192,30 +192,61 @@ export const useWalletStore = create<WalletStore>()(
 
       createAccount: (name?: string) => {
         const state = get();
-        if (!state.mnemonic || !state.password) {
-          throw new Error('No wallet found');
+
+        if (
+          !state.mnemonic ||
+          !state.password
+        ) {
+          throw new Error(
+            "No wallet found"
+          );
         }
 
-        // Decrypt mnemonic to create new account
-        const decryptedMnemonic = AES.decrypt(state.mnemonic, state.password).toString(enc.Utf8);
-        const seedBuffer = bip39.mnemonicToSeedSync(decryptedMnemonic);
-        const seed = new Uint8Array(seedBuffer);
-        const hdNode = ethers.HDNodeWallet.fromSeed(seed);
-        const accountIndex = state.accounts.length;
-        const wallet = hdNode.derivePath(`m/44'/60'/0'/0/${accountIndex}`);
+        /**
+         * 解密助记词
+         */
+        const decryptedMnemonic =
+          AES.decrypt(
+            state.mnemonic,
+            state.originPassword
+          ).toString(enc.Utf8);
+        console.log(decryptedMnemonic);
+        if (!decryptedMnemonic) {
+          throw new Error(
+            "Invalid password"
+          );
+        }
 
-        const account: WalletAccount = {
+        const accountIndex =
+          state.accounts.length;
+
+        /**
+         * 派生账户
+         */
+        const wallet =
+          ethers.HDNodeWallet
+            .fromPhrase(
+              decryptedMnemonic
+            )
+            .derivePath(
+              `44'/60'/0'/0/${accountIndex}`
+            )
+
+        const account = {
           address: wallet.address,
-          privateKey: wallet.privateKey,
-          name: name || `Account ${accountIndex + 1}`,
+          name:
+            name ||
+            `Account ${accountIndex + 1
+            }`,
+
           index: accountIndex
         };
 
-        const encryptedPrivateKey = AES.encrypt(wallet.privateKey, state.password).toString();
-
         set(state => ({
-          accounts: [...state.accounts, { ...account, privateKey: encryptedPrivateKey }],
-          currentAccount: account
+          accounts: [
+            ...state.accounts,
+            account
+          ]
         }));
 
         return account;
@@ -231,10 +262,10 @@ export const useWalletStore = create<WalletStore>()(
 
       updateAccountName: (address: string, name: string) => {
         set(state => ({
-          accounts: state.accounts.map(acc => 
+          accounts: state.accounts.map(acc =>
             acc.address === address ? { ...acc, name } : acc
           ),
-          currentAccount: state.currentAccount?.address === address 
+          currentAccount: state.currentAccount?.address === address
             ? { ...state.currentAccount, name }
             : state.currentAccount
         }));
@@ -304,8 +335,8 @@ export const useWalletStore = create<WalletStore>()(
           throw new Error('请先在插件中导入账户');
         }
         console.log(state);
-        console.log(state.currentAccount );
-        
+        console.log(state.currentAccount);
+
         const account = state.currentAccount as WalletAccount;
         set({
           currentAccount: account,
@@ -328,7 +359,7 @@ export const useWalletStore = create<WalletStore>()(
         return wallet.signMessage(message)
       },
       disconnect: () => {
-        set({ currentAccount: null, isConnected: false})
+        set({ currentAccount: null, isConnected: false })
       }
     }),
     {
@@ -336,27 +367,29 @@ export const useWalletStore = create<WalletStore>()(
       // 自定义存储：使用 chrome.storage.local
       storage: {
         getItem: async (name: string) => {
-            const result = await chrome.storage.local.get(name);
-            return result[name] || null;
-          },
-          setItem: async (name: string, value: any) => {
-            console.log("-----", [name], value)
-            console.log(chrome.storage)
-            await chrome.storage.local.set({ [name]: value });
-          },
-          removeItem: async (name: string) => {
-            await chrome.storage.local.remove(name);
-          }
+          const result = await chrome.storage.local.get(name);
+          return result[name] || null;
+        },
+        setItem: async (name: string, value: any) => {
+          console.log("-----", [name], value)
+          console.log(chrome.storage)
+          await chrome.storage.local.set({ [name]: value });
+        },
+        removeItem: async (name: string) => {
+          await chrome.storage.local.remove(name);
+        }
       },
       partialize: (state) => ({
         accounts: state.accounts,
         mnemonic: state.mnemonic,
         password: state.password,
+        originPassword: state.originPassword,
         networks: state.networks,
         tokens: state.tokens,
         currentNetwork: state.currentNetwork,
         currentAccount: state.currentAccount,
-        isConnected: state.isConnected
+        isConnected: state.isConnected,
+        isLocked: state.isLocked
       })
     }
   )

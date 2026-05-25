@@ -6,7 +6,7 @@ import { useWalletStore } from '@/store/wallet';
 
 const Index = () => {
   const { accounts, isLocked } = useWalletStore();
-  console.log(accounts);
+  console.log(isLocked);
   
   
   // 如果没有账户，显示设置页面
