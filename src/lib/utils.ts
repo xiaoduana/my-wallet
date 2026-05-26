@@ -24,3 +24,38 @@ export async function getWalletState() {
 
   return walletStore?.state
 }
+export function sanitizeTx(tx: any) {
+
+  return {
+
+    to:
+      tx.to,
+
+    data:
+      tx.data || "0x",
+
+    value:
+      tx.value || "0x0",
+
+    gasLimit:
+      tx.gas ||
+      tx.gasLimit,
+
+    maxFeePerGas:
+      tx.maxFeePerGas ||
+      undefined,
+
+    maxPriorityFeePerGas:
+      tx.maxPriorityFeePerGas ||
+      undefined,
+
+    nonce:
+      tx.nonce ??
+      undefined,
+
+    chainId:
+      tx.chainId
+        ? Number(tx.chainId)
+        : undefined
+  }
+}

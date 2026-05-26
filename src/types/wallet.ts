@@ -16,6 +16,7 @@ export interface WalletState {
   currentNetwork: Network;
   networks: Network[];
   tokens: Token[];
+  pendingApprovals: Object;
 }
 
 export interface Network {

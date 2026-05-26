@@ -1,7 +1,7 @@
 
 class MyWalletProvider {
   constructor() {
-    this.chainId = "0x1"
+    this.chainId = "0xaa36a7"
 
     this.selectedAddress = null
 
@@ -37,8 +37,19 @@ class MyWalletProvider {
   async request (args) {
     return new Promise(
       (resolve, reject) => {
-        const id =
+        const requestId =
           crypto.randomUUID()
+        /**
+         * 保存 promise
+         */
+        this.pendingRequests ??= {}
+
+        this.pendingRequests[
+          requestId
+        ] = {
+          resolve,
+          reject
+        }
 
         window.postMessage(
           {
@@ -48,7 +59,7 @@ class MyWalletProvider {
 
             type: "request",
 
-            id,
+            requestId,
 
             args
           },
@@ -59,21 +70,9 @@ class MyWalletProvider {
           /**
            * 关键
            */
-          if (
-            event.data?.source !==
-            "my-wallet"
-          )
-            return
-          if (
-            event.data?.type !==
-            "response"
-          )
-            return
-
-          if (
-            event.data?.id !== id
-          )
-            return
+          if (event.data?.source !== "my-wallet") return
+          if (event.data?.type !== "response") return
+          if (event.data?.requestId !== requestId) return
 
           window.removeEventListener(
             "message",
@@ -115,12 +114,7 @@ class MyWalletProvider {
              * 且账户变化时
              * 才广播
              */
-            if (
-              args.method ===
-              "eth_requestAccounts" &&
-              nextAddress !==
-              previousAddress
-            ) {
+            if (nextAddress !== previousAddress) {
               this.emit(
                 "accountsChanged",
                 accounts
@@ -130,6 +124,26 @@ class MyWalletProvider {
                 chainId: this.chainId
               })
             }
+          }
+
+          if (
+            event.data?.target ===
+            "my-wallet-injected"
+          ) {
+            const pending =
+              this.pendingRequests?.[
+              event.data.requestId
+              ]
+
+            if (!pending) return
+
+            pending.resolve(
+              event.data.result
+            )
+
+            delete this.pendingRequests[
+              event.data.requestId
+            ]
           }
 
           resolve(event.data.result)

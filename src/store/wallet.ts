@@ -71,7 +71,8 @@ const initialState: WalletState = {
   originPassword: null,
   currentNetwork: DEFAULT_NETWORKS[0],
   networks: DEFAULT_NETWORKS,
-  tokens: []
+  tokens: [],
+  pendingApprovals: {}
 };
 
 export const useWalletStore = create<WalletStore>()(
@@ -389,7 +390,8 @@ export const useWalletStore = create<WalletStore>()(
         currentNetwork: state.currentNetwork,
         currentAccount: state.currentAccount,
         isConnected: state.isConnected,
-        isLocked: state.isLocked
+        isLocked: state.isLocked,
+        pendingApprovals: state.pendingApprovals
       })
     }
   )
