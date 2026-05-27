@@ -59,3 +59,101 @@ export function sanitizeTx(tx: any) {
         : undefined
   }
 }
+import CryptoJS from "crypto-js"
+
+/**
+ * 判断是否是原始 privateKey
+ */
+export function isRawPrivateKey(
+  value: string
+) {
+
+  if (!value) {
+    return false
+  }
+
+  /**
+   * 必须:
+   * 0x + 64位 hex
+   */
+  return /^0x[a-fA-F0-9]{64}$/
+    .test(value)
+}
+
+/**
+ * 判断是否是 AES 加密数据
+ */
+export function isEncryptedData(
+  value: string
+) {
+
+  if (!value) {
+    return false
+  }
+
+  /**
+   * CryptoJS AES 默认特征
+   */
+  return value.startsWith(
+    "U2FsdGVkX1"
+  )
+}
+
+/**
+ * 自动解析 privateKey
+ */
+export function parsePrivateKey(
+  value: string,
+  password?: string
+) {
+
+  /**
+   * 原始 pk
+   */
+  if (
+    isRawPrivateKey(value)
+  ) {
+
+    return value
+  }
+
+  /**
+   * AES encrypted
+   */
+  if (
+    isEncryptedData(value)
+  ) {
+
+    if (!password) {
+
+      throw new Error(
+        "Password required"
+      )
+    }
+
+    const decrypted =
+      CryptoJS.AES.decrypt(
+        value,
+        password
+      ).toString(
+        CryptoJS.enc.Utf8
+      )
+
+    if (
+      !isRawPrivateKey(
+        decrypted
+      )
+    ) {
+
+      throw new Error(
+        "Decrypt failed"
+      )
+    }
+
+    return decrypted
+  }
+
+  throw new Error(
+    "Unknown private key format"
+  )
+}

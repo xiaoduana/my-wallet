@@ -38,15 +38,17 @@ export default function ApprovalPage() {
   async function handleApprove() {
     console.log("handleApprove---approvalId:", approvalId);
     console.log("handleApprove---approval:", approval);
+    setLoading(true);
     try {
       await chrome.runtime.sendMessage({
         type: "APPROVE_TX",
         approvalId
       });
-
+      setLoading(false);
       window.close();
     } catch (err) {
       console.error(err);
+      setLoading(false);
     }
   }
 

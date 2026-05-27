@@ -10,8 +10,10 @@ import { useWalletBalance } from '@/hooks/useWalletBalance';
 import { useToast } from '@/hooks/use-toast';
 import { ethers } from 'ethers';
 import { Send, ArrowRight, AlertTriangle, CheckCircle } from 'lucide-react';
+import TokenSelect from './TokenSelect';
 import CryptoJS from 'crypto-js';
-
+import { StorageService } from "@/services/storage.service"
+import { parsePrivateKey } from "@/lib/utils"
 interface SendForm {
   to: string;
   amount: string;
@@ -35,67 +37,71 @@ export const SendTransaction = () => {
   const [password, setPassword] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
+  const [tokenAddress, setTokenAddress] = useState("");
 
-  const { 
-    currentAccount, 
-    currentNetwork, 
-    tokens, 
-    getProvider, 
-    isValidPassword 
+  const {
+    currentAccount,
+    currentNetwork,
+    tokens,
+    getProvider,
+    isValidPassword
   } = useWalletStore();
   const { ethBalance } = useWalletBalance();
   const { toast } = useToast();
-
+  console.log("tokens:", tokens);
   const selectedToken = tokens.find(token => token.address === form.tokenAddress);
 
-  const validateForm = () => {
-    if (!ethers.isAddress(form.to)) {
-      toast({
-        title: "无效的接收地址",
-        variant: "destructive"
-      });
-      return false;
-    }
+  // const validateForm = () => {
+  //   if (!ethers.isAddress(form.to)) {
+  //     toast({
+  //       title: "无效的接收地址",
+  //       variant: "destructive"
+  //     });
+  //     return false;
+  //   }
 
-    if (!form.amount || parseFloat(form.amount) <= 0) {
-      toast({
-        title: "请输入有效金额",
-        variant: "destructive"
-      });
-      return false;
-    }
+  //   if (!form.amount || parseFloat(form.amount) <= 0) {
+  //     toast({
+  //       title: "请输入有效金额",
+  //       variant: "destructive"
+  //     });
+  //     return false;
+  //   }
 
-    if (selectedAsset === 'ETH') {
-      if (parseFloat(form.amount) > parseFloat(ethBalance)) {
-        toast({
-          title: "余额不足",
-          description: "ETH余额不足",
-          variant: "destructive"
-        });
-        return false;
-      }
-    } else if (selectedToken) {
-      const tokenBalance = parseFloat(selectedToken.balance || '0');
-      if (selectedToken.type === 'ERC20' && parseFloat(form.amount) > tokenBalance) {
-        toast({
-          title: "余额不足",
-          description: `${selectedToken.symbol}余额不足`,
-          variant: "destructive"
-        });
-        return false;
-      }
-    }
+  //   if (selectedAsset === 'ETH') {
+  //     if (parseFloat(form.amount) > parseFloat(ethBalance)) {
+  //       toast({
+  //         title: "余额不足",
+  //         description: "ETH余额不足",
+  //         variant: "destructive"
+  //       });
+  //       return false;
+  //     }
+  //   } else if (selectedToken) {
+  //     const tokenBalance = parseFloat(selectedToken.balance || '0');
+  //     if (selectedToken.type === 'ERC20' && parseFloat(form.amount) > tokenBalance) {
+  //       toast({
+  //         title: "余额不足",
+  //         description: `${selectedToken.symbol}余额不足`,
+  //         variant: "destructive"
+  //       });
+  //       return false;
+  //     }
+  //   }
 
-    return true;
-  };
+  //   return true;
+  // };
 
-  const handleSend = async () => {
-    if (!validateForm()) return;
-    setIsConfirmDialogOpen(true);
-  };
+  // const handleSend = async () => {
+  //   if (!validateForm()) return;
+  //   setIsConfirmDialogOpen(true);
+  // };
 
   const executeTransaction = async () => {
-    if (!password) {
+    const walletStore = await StorageService.get("wallet-store");
+    console.log("walletStore:", walletStore);
+    const originPassword = walletStore.state?.originPassword || "";
+    if (!originPassword) {
       toast({
         title: "请输入密码",
         variant: "destructive"
@@ -103,7 +109,7 @@ export const SendTransaction = () => {
       return;
     }
 
-    if (!isValidPassword(password)) {
+    if (!isValidPassword(originPassword)) {
       toast({
         title: "密码错误",
         description: "请检查您的密码",
@@ -122,10 +128,10 @@ export const SendTransaction = () => {
       }
 
       // 解密私钥
-      const decryptedPrivateKey = CryptoJS.AES.decrypt(
+      const decryptedPrivateKey = parsePrivateKey(
         currentAccount.privateKey,
-        password
-      ).toString(CryptoJS.enc.Utf8);
+        originPassword
+      );
 
       const wallet = new ethers.Wallet(decryptedPrivateKey, provider);
 
@@ -147,22 +153,24 @@ export const SendTransaction = () => {
           ];
           const contract = new ethers.Contract(selectedToken.address, erc20Abi, wallet);
           const amount = ethers.parseUnits(form.amount, selectedToken.decimals);
-          
+          const gas = await contract.transfer.estimateGas(
+            form.to,
+            amount
+          )
           tx = await contract.transfer(form.to, amount, {
-            gasLimit: form.gasLimit || '60000',
-            gasPrice: ethers.parseUnits(form.gasPrice || '20', 'gwei')
+            gasLimit: gas,
           });
         } else if (selectedToken.type === 'ERC721') {
           // 发送NFT
           if (!form.tokenId) {
             throw new Error('请输入Token ID');
           }
-          
+
           const erc721Abi = [
             'function safeTransferFrom(address from, address to, uint256 tokenId)'
           ];
           const contract = new ethers.Contract(selectedToken.address, erc721Abi, wallet);
-          
+
           tx = await contract.safeTransferFrom(
             currentAccount.address,
             form.to,
@@ -184,7 +192,7 @@ export const SendTransaction = () => {
 
         // 等待交易确认
         await tx.wait();
-        
+
         toast({
           title: "交易成功！",
           description: "交易已被确认"
@@ -247,8 +255,8 @@ export const SendTransaction = () => {
               {txHash}
             </div>
             {currentNetwork.blockExplorerUrl && (
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="mt-4"
                 onClick={() => window.open(`${currentNetwork.blockExplorerUrl}/tx/${txHash}`, '_blank')}
               >
@@ -277,26 +285,15 @@ export const SendTransaction = () => {
                 >
                   {currentNetwork.symbol}
                 </Button>
-                {tokens.length > 0 && (
-                  <Select
-                    value={selectedAsset === 'TOKEN' ? form.tokenAddress : ''}
-                    onValueChange={(value) => {
-                      setSelectedAsset('TOKEN');
-                      setForm({ ...form, tokenAddress: value });
-                    }}
-                  >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="选择代币" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {tokens.map((token) => (
-                        <SelectItem key={token.address} value={token.address}>
-                          {token.symbol} ({token.type})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
+                {tokens.length > 0 && <TokenSelect
+                  tokens={tokens}
+                  value={tokenAddress}
+                  onChange={(token) => {
+                    console.log("选中的代币:", token);
+                    setSelectedAsset('TOKEN');
+                    setForm({ ...form, tokenAddress: token.address });
+                  }}
+                />}
               </div>
             </div>
 
@@ -328,7 +325,7 @@ export const SendTransaction = () => {
                     }
                   }}
                   placeholder={selectedToken?.type === 'ERC721' ? '输入Token ID' : '0.0'}
-                  type={selectedToken?.type === 'ERC721' ? 'text' : 'number'}
+                  type="text"
                   step="any"
                 />
                 {selectedAsset === 'ETH' ? (
@@ -390,8 +387,8 @@ export const SendTransaction = () => {
               </div>
             </div> */}
 
-            <Button 
-              onClick={handleSend} 
+            <Button
+              onClick={executeTransaction}
               className="w-full bg-wallet-gradient hover:opacity-90"
               disabled={!form.to || (!form.amount && !form.tokenId)}
             >
@@ -403,7 +400,7 @@ export const SendTransaction = () => {
       )}
 
       {/* 确认对话框 */}
-      <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
+      {/* <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -472,7 +469,7 @@ export const SendTransaction = () => {
             </div>
           </div>
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
     </div>
   );
 };

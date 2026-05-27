@@ -14,7 +14,8 @@ import {
   Network,
   Plus,
   Send,
-  Wallet
+  Wallet,
+  ChevronDown
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { AccountManager } from './AccountManager';
@@ -30,8 +31,8 @@ export const WalletDashboard = () => {
   const { currentAccount, currentNetwork, lockWallet, tokens } = useWalletStore();
   console.log(currentAccount);
   console.log(currentNetwork);
-  
-  
+
+
   const { ethBalance, isLoading, refreshBalances } = useWalletBalance();
   const { toast } = useToast();
 
@@ -58,18 +59,15 @@ export const WalletDashboard = () => {
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-2xl mx-auto space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {/* <div className="w-10 h-10 bg-[rgb(44,46,55)] rounded-full flex items-center justify-center">
-            </div> */}
+          <div>
             <div>
-              {/* <h1 className="text-2xl font-bold bg-wallet-gradient bg-clip-text text-transparent">
-                MetaNodeWallet
-              </h1> */}
-              <p className="text-sm text-muted-foreground">
-                {currentAccount.name}
+              <p onClick={() => setActiveTab('accounts')} className="flex items-center text-lg text-black text-bold text-muted-foreground cursor-pointer">
+                {currentAccount.name}<ChevronDown className='inline-block' />
               </p>
+            </div>
+            <div className="flex mt-2">
+              {formatAddress(currentAccount.address)}<Copy onClick={copyAddress} className="inline-block ml-2 w-4 h-4" />
             </div>
           </div>
           <Button
@@ -83,20 +81,13 @@ export const WalletDashboard = () => {
         </div>
 
         {/* Navigation */}
-        <div className="flex gap-1 justify-between rounded-md bg-[rgb(159,209,43)] overflow-x-hidden">
+        <div className="flex gap-1 justify-between rounded-md bg-[rgb(200,201,199)] overflow-x-hidden">
           <Button
             variant={activeTab === 'overview' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setActiveTab('overview')}
           >
             总览
-          </Button>
-          <Button
-            variant={activeTab === 'accounts' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setActiveTab('accounts')}
-          >
-            账户
           </Button>
           <Button
             variant={activeTab === 'networks' ? 'default' : 'ghost'}
@@ -127,35 +118,6 @@ export const WalletDashboard = () => {
         {/* Content */}
         {activeTab === 'overview' && (
           <div className="space-y-6">
-            {/* Account Info Card */}
-            <Card className="bg-wallet-gradient">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="text-[rgb(45,46,55)] text-sm">当前账户</div>
-                  <Badge variant="secondary" className="bg-white/20 text-[rgba(45,46,55,0.5)] border-white/20">
-                    {currentNetwork.name}
-                  </Badge>
-                </div>
-                
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="text-2xl font-bold text-[rgb(45,46,55)]">
-                    {currentAccount.name}
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={copyAddress}
-                    className="text-[rgb(45,46,55)] hover:text-[rgb(45,46,55)] hover:bg-[rgb(184,247,3)]"
-                  >
-                    {copiedAddress ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  </Button>
-                </div>
-
-                <div className="text-[rgb(45,46,55)] text-sm font-mono">
-                  {formatAddress(currentAccount.address)}
-                </div>
-              </CardContent>
-            </Card>
 
             {/* Balance Card */}
             <Card>
@@ -195,57 +157,70 @@ export const WalletDashboard = () => {
 
             {/* Tokens */}
             {tokens.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm font-medium">代币资产</CardTitle>
+              <Card className="border border-border/50 shadow-sm rounded-2xl">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base font-semibold">
+                    代币资产
+                  </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {tokens.map((token) => (
-                      <div key={token.address} className="flex items-center justify-between p-3 border border-border rounded-lg">
-                        <div className="flex items-center gap-3">
-                          {token.image && (
-                            <img 
-                              src={token.image} 
+
+                <CardContent className="space-y-2">
+                  {tokens.map((token) => (
+                    <div
+                      key={token.address}
+                      className="
+                        flex items-center justify-between
+                        p-1 rounded-xl
+                        hover:bg-muted/50
+                        transition-colors
+                        cursor-pointer
+                      "
+                    >
+                      {/* 左侧 */}
+                      <div className="flex items-center gap-3 min-w-0">
+                        {/* token logo */}
+                        <div className="shrink-0">
+                          {token.image ? (
+                            <img
+                              src={token.image}
                               alt={token.symbol}
-                              className="w-8 h-8 rounded-full"
+                              className="w-10 h-10 rounded-full"
                             />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-bold">
+                              {token.symbol?.slice(0, 1)}
+                            </div>
                           )}
-                          <div>
-                            <div className="font-medium">{token.symbol}</div>
-                            <div className="text-sm text-muted-foreground">{token.name}</div>
-                          </div>
                         </div>
-                        <div className="text-right">
-                          <div className="font-medium">
-                            {showBalance ? (token.balance || '0') : '••••'}
+
+                        {/* token info */}
+                        <div className="min-w-0">
+                          <div className="font-semibold truncate">
+                            {token.symbol}
                           </div>
-                          <div className="text-sm text-muted-foreground">{token.type}</div>
+
+                          <div className="text-sm text-muted-foreground truncate">
+                            {token.name}
+                          </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
+
+                      {/* 右侧 */}
+                      <div className="text-right">
+                        <div className="font-semibold text-base">
+                          {showBalance ? (token.balance || '0') : '••••'}
+                        </div>
+
+                        <div className="text-xs text-muted-foreground uppercase">
+                          {token.type}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </CardContent>
               </Card>
             )}
 
-            {/* Quick Actions */}
-            <div className="grid grid-cols-2 gap-3">
-              <Button 
-                onClick={() => setActiveTab('send')}
-                className="bg-wallet-gradient hover:opacity-90"
-              >
-                <Send className="w-4 h-4 mr-2" />
-                转账
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={() => setActiveTab('tokens')}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                添加代币
-              </Button>
-            </div>
           </div>
         )}
 

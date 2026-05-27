@@ -52,9 +52,9 @@ export const TokenManager = () => {
           'function symbol() view returns (string)',
           'function decimals() view returns (uint8)'
         ];
-        
+
         const contract = new ethers.Contract(newToken.address, erc20Abi, provider);
-        
+
         const [name, symbol, decimals] = await Promise.all([
           contract.name(),
           contract.symbol(),
@@ -77,9 +77,9 @@ export const TokenManager = () => {
           'function name() view returns (string)',
           'function symbol() view returns (string)'
         ];
-        
+
         const contract = new ethers.Contract(newToken.address, erc721Abi, provider);
-        
+
         const [name, symbol] = await Promise.all([
           contract.name(),
           contract.symbol()
@@ -139,10 +139,10 @@ export const TokenManager = () => {
 
     try {
       addToken(token);
-      
+
       // 获取余额
       await fetchTokenBalance(token);
-      
+
       setIsAddDialogOpen(false);
       setNewToken({
         address: '',
@@ -153,7 +153,7 @@ export const TokenManager = () => {
         image: '',
         tokenId: ''
       });
-      
+
       toast({
         title: "代币添加成功！",
         description: `${token.symbol} 已添加到代币列表`
@@ -213,7 +213,7 @@ export const TokenManager = () => {
             }
           }
         });
-        
+
         toast({
           title: "代币已添加到钱包",
           description: `${token.symbol} 已添加到MetaMask`
@@ -225,7 +225,7 @@ export const TokenManager = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-h-[390px]">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">代币管理</h2>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -242,8 +242,8 @@ export const TokenManager = () => {
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="tokenType">代币类型</Label>
-                <Select 
-                  value={newToken.type} 
+                <Select
+                  value={newToken.type}
                   onValueChange={(value) => setNewToken({ ...newToken, type: value as any })}
                 >
                   <SelectTrigger>
@@ -266,9 +266,9 @@ export const TokenManager = () => {
                     onChange={(e) => setNewToken({ ...newToken, address: e.target.value })}
                     placeholder="0x..."
                   />
-                  <Button 
-                    type="button" 
-                    variant="outline" 
+                  <Button
+                    type="button"
+                    variant="outline"
                     size="sm"
                     onClick={detectTokenInfo}
                     disabled={isDetecting || !newToken.address}
@@ -281,62 +281,65 @@ export const TokenManager = () => {
                   </Button>
                 </div>
               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="tokenSymbol">代币符号 *</Label>
-                <Input
-                  id="tokenSymbol"
-                  value={newToken.symbol}
-                  onChange={(e) => setNewToken({ ...newToken, symbol: e.target.value })}
-                  placeholder="USDT"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="tokenName">代币名称 *</Label>
-                <Input
-                  id="tokenName"
-                  value={newToken.name}
-                  onChange={(e) => setNewToken({ ...newToken, name: e.target.value })}
-                  placeholder="Tether USD"
-                />
-              </div>
-              
-              {newToken.type === 'ERC20' && (
-                <div className="space-y-2">
-                  <Label htmlFor="tokenDecimals">小数位数</Label>
-                  <Input
-                    id="tokenDecimals"
-                    type="number"
-                    value={newToken.decimals || ''}
-                    onChange={(e) => setNewToken({ ...newToken, decimals: parseInt(e.target.value) || 18 })}
-                    placeholder="18"
-                  />
-                </div>
-              )}
 
-              {newToken.type === 'ERC721' && (
-                <div className="space-y-2">
-                  <Label htmlFor="tokenId">Token ID (可选)</Label>
-                  <Input
-                    id="tokenId"
-                    value={newToken.tokenId}
-                    onChange={(e) => setNewToken({ ...newToken, tokenId: e.target.value })}
-                    placeholder="1"
+              {newToken.address && (
+                <div>
+                  <div className="space-y-2">
+                    <Label htmlFor="tokenSymbol">代币符号 *</Label>
+                    <Input
+                      id="tokenSymbol"
+                      value={newToken.symbol}
+                    onChange={(e) => setNewToken({ ...newToken, symbol: e.target.value })}
+                    placeholder="USDT"
                   />
                 </div>
-              )}
-              
-              <div className="space-y-2">
-                <Label htmlFor="tokenImage">图标URL (可选)</Label>
-                <Input
-                  id="tokenImage"
-                  value={newToken.image}
-                  onChange={(e) => setNewToken({ ...newToken, image: e.target.value })}
-                  placeholder="https://..."
-                />
-              </div>
-              
+
+                <div className="space-y-2">
+                  <Label htmlFor="tokenName">代币名称 *</Label>
+                  <Input
+                    id="tokenName"
+                    value={newToken.name}
+                    onChange={(e) => setNewToken({ ...newToken, name: e.target.value })}
+                    placeholder="Tether USD"
+                  />
+                </div>
+
+                {newToken.type === 'ERC20' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="tokenDecimals">小数位数</Label>
+                    <Input
+                      id="tokenDecimals"
+                      type="number"
+                      value={newToken.decimals || ''}
+                      onChange={(e) => setNewToken({ ...newToken, decimals: parseInt(e.target.value) || 18 })}
+                      placeholder="18"
+                    />
+                  </div>
+                )}
+
+                {newToken.type === 'ERC721' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="tokenId">Token ID (可选)</Label>
+                    <Input
+                      id="tokenId"
+                      value={newToken.tokenId}
+                      onChange={(e) => setNewToken({ ...newToken, tokenId: e.target.value })}
+                      placeholder="1"
+                    />
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="tokenImage">图标URL (可选)</Label>
+                  <Input
+                    id="tokenImage"
+                    value={newToken.image}
+                    onChange={(e) => setNewToken({ ...newToken, image: e.target.value })}
+                    placeholder="https://..."
+                  />
+                </div>
+              </div>)}
+
               <Button onClick={handleAddToken} className="w-full">
                 <Coins className="w-4 h-4 mr-2" />
                 添加代币
@@ -368,8 +371,8 @@ export const TokenManager = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     {token.image ? (
-                      <img 
-                        src={token.image} 
+                      <img
+                        src={token.image}
                         alt={token.symbol}
                         className="w-10 h-10 rounded-full"
                       />
@@ -387,7 +390,7 @@ export const TokenManager = () => {
                       <div className="text-sm text-muted-foreground">{token.name}</div>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     <div className="text-right">
                       <div className="font-medium">
@@ -397,7 +400,7 @@ export const TokenManager = () => {
                         {token.type}
                       </div>
                     </div>
-                    
+
                     <Button
                       variant="ghost"
                       size="sm"
@@ -405,7 +408,7 @@ export const TokenManager = () => {
                     >
                       <RefreshCw className="w-4 h-4" />
                     </Button>
-                    
+
                     <Button
                       variant="ghost"
                       size="sm"
@@ -415,7 +418,7 @@ export const TokenManager = () => {
                     </Button>
                   </div>
                 </div>
-                
+
                 <div className="mt-2 text-xs text-muted-foreground font-mono">
                   {token.address}
                 </div>

@@ -4,6 +4,7 @@ import {
 } from "ethers"
 import CryptoJS from "crypto-js"
 import { getWalletState } from "@/lib/utils"
+import { parsePrivateKey } from "@/lib/utils"
 
 export async function getWallet() {
   try {
@@ -37,19 +38,17 @@ export async function getWallet() {
     /**
      * decrypt private key
      */
-    // const privateKey =
-    //   CryptoJS.AES.decrypt(
-    //     currentAccount.privateKey,
-    //     originPassword
-    //   ).toString(
-    //     CryptoJS.enc.Utf8
-    //   )
+    const privateKey =
+      parsePrivateKey(
+        currentAccount.privateKey,
+        originPassword
+      )
 
-    // if (!privateKey) {
-    //   throw new Error(
-    //     "Decrypt private key failed"
-    //   )
-    // }
+    if (!privateKey) {
+      throw new Error(
+        "Decrypt private key failed"
+      )
+    }
 
     /**
      * provider
@@ -64,7 +63,7 @@ export async function getWallet() {
      */
     const wallet =
       new Wallet(
-        currentAccount.privateKey,
+        privateKey,
         provider
       )
 

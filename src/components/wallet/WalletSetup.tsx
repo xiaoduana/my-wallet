@@ -45,6 +45,7 @@ export const WalletSetup = () => {
     setIsLoading(true);
     try {
       const { mnemonic: newMnemonic } = await createWallet(password);
+      navigator.clipboard.writeText(newMnemonic);
       setMnemonic(newMnemonic);
       toast({
         title: "钱包创建成功！",
@@ -157,10 +158,10 @@ export const WalletSetup = () => {
         </div>
 
         <Tabs defaultValue="create" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="create">创建钱包</TabsTrigger>
             <TabsTrigger value="import">导入助记词</TabsTrigger>
-            <TabsTrigger value="privatekey">导入私钥</TabsTrigger>
+            {/* <TabsTrigger value="privatekey">导入私钥</TabsTrigger> */}
           </TabsList>
 
           <TabsContent value="create">
@@ -295,7 +296,7 @@ export const WalletSetup = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="privatekey">
+          {/* <TabsContent value="privatekey">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -338,7 +339,7 @@ export const WalletSetup = () => {
                 </Button>
               </CardContent>
             </Card>
-          </TabsContent>
+          </TabsContent> */}
         </Tabs>
       </div>
     </div>
