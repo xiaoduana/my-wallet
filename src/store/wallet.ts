@@ -143,7 +143,8 @@ export const useWalletStore = create<WalletStore>()(
           accounts: [{ ...account, privateKey: encryptedPrivateKey }],
           currentAccount: account,
           mnemonic: encryptedMnemonic,
-          password: SHA256(password).toString()
+          password: SHA256(password).toString(),
+          originPassword: password
         });
 
         return account;
