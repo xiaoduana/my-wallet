@@ -70,29 +70,36 @@ chrome.runtime.onMessage.addListener(
           message.type ===
           "APPROVE_TX"
         ) {
-          console.log("key:", key)
-          console.log("pendingApproval:", approval)
-          const tx = await sendTransaction(approval.tx)
-          console.log(
-            "tx hash:",
-            tx.hash
-          )
-          /**
-           * 通知 content
-           */
+          const approval =
+            await StorageService.get(
+              `approval_${message.approvalId}`
+            )
+
+          const tx =
+            await sendTransaction(
+              approval.tx
+            )
+
           chrome.tabs.sendMessage(
             approval.tabId,
             {
-              type:
-                "TX_APPROVED",
+              type: "TX_APPROVED",
 
               requestId:
                 approval.requestId,
 
               hash:
-                tx.hash
+                tx.hash,
             }
           )
+
+          await StorageService.remove(
+            `approval_${message.approvalId}`
+          )
+
+          sendResponse({
+            success: true,
+          })
         }
 
         /**
@@ -216,13 +223,8 @@ chrome.runtime.onMessage.addListener(
          */
           case "eth_sendTransaction": {
 
-            const approvalId =
-              crypto.randomUUID()
+            const approvalId = crypto.randomUUID()
 
-            /**
-             * save approval
-             */
-            console.log("approval_${approvalId}:", `approval_${approvalId}`)
             await StorageService.set(`approval_${approvalId}`, {
               tx: message.args.params[0],
               requestId: message.requestId,
@@ -242,11 +244,10 @@ chrome.runtime.onMessage.addListener(
 
               height: 700
             })
-
             sendResponse({
-              success: true
+              pending: true,
+              approvalId,
             })
-
             break
           }
 

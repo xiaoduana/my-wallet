@@ -1,4 +1,46 @@
 import injectScript from "url:./inject.js"
+chrome.runtime.onMessage.addListener(
+  (
+    message,
+    sender,
+    sendResponse
+  ) => {
+    console.log(
+      "content receive",
+      message
+    )
+
+    try {
+      if (
+        message.type ===
+        "TX_APPROVED"
+      ) {
+        console.log(
+          "content -> inject",
+          message
+        )
+        window.postMessage({
+          source: "my-wallet",
+          target:
+            "my-wallet-injected",
+
+          requestId:
+            message.requestId,
+          type: "response",
+
+          result:
+            message.hash
+        })
+      }
+    } catch (err) {
+      console.error(err)
+
+      sendResponse({
+        success: false
+      })
+    }
+  }
+)
 
 /**
  * 注入 provider
@@ -23,6 +65,7 @@ script.onload = () => {
 window.addEventListener(
   "message",
   async (event) => {
+
     if (event.source !== window) return
     if (event.data?.source !== "my-wallet") return
     if (event.data?.type != "request") return
@@ -42,38 +85,22 @@ window.addEventListener(
       /**
        * 返回 inject.js
        */
-      window.postMessage(
-        {
-          source: "my-wallet",
-          type: "response",
-          requestId: event.data.requestId,
-          result: response.result,
-          args: event.data.args
-        },
-        "*"
-      )
+      if (
+        event.data.args.method !==
+        "eth_sendTransaction"
+      ) {
+        window.postMessage(
+          {
+            source: "my-wallet",
+            type: "response",
+            requestId: event.data.requestId,
+            result: response.result,
+            args: event.data.args
+          },
+          "*"
+        )
+      }
 
-      chrome.runtime.onMessage.addListener(
-        (message) => {
-
-          if (
-            message.type ===
-            "TX_APPROVED"
-          ) {
-
-            window.postMessage({
-              target:
-                "my-wallet-injected",
-
-              requestId:
-                message.requestId,
-
-              result:
-                message.hash
-            })
-          }
-        }
-      )
     } catch (error) {
       window.postMessage(
         {
